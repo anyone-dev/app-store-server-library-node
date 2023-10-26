@@ -73,7 +73,7 @@ export { PromotionalOfferSignatureCreator } from './promotional_offer'
 export { DecodedSignedData } from './models/DecodedSignedData'
 export { AppTransaction } from './models/AppTransaction'
 
-import jsonwebtoken = require('jsonwebtoken');
+import * as jose from 'jose';
 import { NotificationHistoryRequest } from './models/NotificationHistoryRequest';
 import { NotificationHistoryResponse, NotificationHistoryResponseValidator } from './models/NotificationHistoryResponse';
 
@@ -107,7 +107,7 @@ export class AppStoreServerAPIClient {
     protected async makeRequest<T>(path: string, method: string, queryParameters: { [key: string]: [string]}, body: object | null, validator: Validator<T> | null): Promise<T> {
         const headers: { [key: string]: string } = {
             'User-Agent': AppStoreServerAPIClient.USER_AGENT,
-            'Authorization': 'Bearer ' + this.createBearerToken(),
+            'Authorization': 'Bearer ' + await this.createBearerToken(),
             'Accept': 'application/json',
         }
         const parsedQueryParameters = new URLSearchParams(queryParameters)
@@ -347,11 +347,19 @@ export class AppStoreServerAPIClient {
         await this.makeRequest("/inApps/v1/transactions/consumption/" + transactionId, "PUT", {}, consumptionRequest, null);
     }
 
-    private createBearerToken(): string {
+    private async createBearerToken(): Promise<string> {
         const payload = {
             bid: this.bundleId
         }
-        return jsonwebtoken.sign(payload, this.signingKey, { algorithm: 'ES256', keyid: this.keyId, issuer: this.issueId, audience: 'appstoreconnect-v1', expiresIn: '5m'});
+
+        const alg = 'ES256'
+
+        return new jose.SignJWT(payload)
+          .setProtectedHeader({ alg, kid: this.keyId})
+          .setIssuer(this.issueId)
+          .setAudience('appstoreconnect-v1')
+          .setExpirationTime('5m')
+          .sign(await jose.importPKCS8(this.signingKey, alg))
     }
 }
 

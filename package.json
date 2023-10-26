@@ -1,13 +1,15 @@
 {
-  "name": "@apple/app-store-server-library",
+  "name": "@anyone-dev/app-store-server-library",
   "version": "0.1.1",
   "description": "The App Store Server Library",
   "main": "dist/index.js",
   "keywords": [],
   "author": "Apple Inc.",
   "license": "MIT",
+
+  "private": false,
   "repository": {
-    "url": "https://github.com/apple/app-store-server-library-node"
+    "url": "https://github.com/anyone-dev/app-store-server-library-node"
   },
   "types": "dist/index.d.ts",
   "dependencies": {
